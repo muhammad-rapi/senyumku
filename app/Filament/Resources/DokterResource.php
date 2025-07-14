@@ -30,10 +30,6 @@ class DokterResource extends Resource
                     ->required()
                     ->maxLength(255)
                     ->label('Nama Dokter'),
-                Forms\Components\TextInput::make('spesialisasi')
-                    ->required()
-                    ->maxLength(255)
-                    ->label('Spesialisasi'),
                 Forms\Components\TextInput::make('telepon')
                     ->tel()
                     ->required()
@@ -56,9 +52,6 @@ class DokterResource extends Resource
                     ->searchable()
                     ->sortable()
                     ->label('Nama Dokter'),
-                Tables\Columns\TextColumn::make('spesialisasi')
-                    ->searchable()
-                    ->label('Spesialisasi'),
                 Tables\Columns\TextColumn::make('telepon')
                     ->searchable()
                     ->label('Telepon'),

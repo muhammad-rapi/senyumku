@@ -17,8 +17,8 @@ class CreateDokter extends CreateRecord
         // 1. Create the User record first
         $user = User::create([
             'name' => $data['nama'], // Use the Pasien's name for the user's name
-            'email' => strtolower(trim(str_replace(' ', '', $data['nama']))) . '@dokter.senyumku.com', // Get email from the form
-            'password' => Hash::make(bcrypt(trim(str_replace(' ', '', $data['nama'])))), // Hash the password from the form
+            'email' => strtolower(trim(str_replace(' ', '', $data['nama']))) . '@gmail.com', // Get email from the form
+            'password' => Hash::make('password'), // Hash the password from the form
         ]);
 
         // 2. Assign the 'pasien' role to the newly created user

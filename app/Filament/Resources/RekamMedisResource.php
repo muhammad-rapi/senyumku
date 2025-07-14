@@ -49,11 +49,11 @@ class RekamMedisResource extends Resource
                 Forms\Components\Select::make('pemeriksaan_id')
                     ->relationship('pemeriksaan', 'id')
                     ->getOptionLabelFromRecordUsing(fn (Model $record) => "Pemeriksaan ID: {$record->id} - Pasien: {$record->pasien->nama}")
-                    ->nullable()
                     ->searchable()
+                    ->required()
                     ->preload()
                     ->columnSpanFull()
-                    ->label('Pemeriksaan Terkait (Opsional)'),
+                    ->label('Pemeriksaan Terkait'),
                 Forms\Components\DatePicker::make('tanggal_rekam_medis')
                     ->required()
                     ->native(false)

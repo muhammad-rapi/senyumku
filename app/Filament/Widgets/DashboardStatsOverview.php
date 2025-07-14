@@ -10,15 +10,15 @@ use App\Models\Obat;
 
 class DashboardStatsOverview extends BaseWidget
 {
-
-    public function canAccess(): bool
-    {
-        return auth()->user()->can('view_dashboard');
-    }
-
     protected function getStats(): array
     {
+        if (auth()->user()->hasRole('pasien')) {
+            return [
+                Stat::make('Total Rekam Medis', auth()->user()->pasien->rekamMedis()->count())
+            ];
+        }
         return [
+
             Stat::make('Total Pasien', Pasien::count())
                 ->description('Jumlah pasien')
                 ->descriptionIcon('heroicon-o-users')
