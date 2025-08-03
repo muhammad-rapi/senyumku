@@ -22,7 +22,7 @@ class CreateDokter extends CreateRecord
         ]);
 
         // 2. Assign the 'pasien' role to the newly created user
-        $user->assignRole('pasien');
+        $user->assignRole('dokter');
 
         // 3. Attach the user_id to the data that will be used to create the Pasien record
         $data['user_id'] = $user->id;

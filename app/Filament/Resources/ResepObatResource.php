@@ -50,11 +50,6 @@ class ResepObatResource extends Resource
                     ->displayFormat('d/m/Y')
                     ->label('Tanggal Resep'),
 
-                Forms\Components\Textarea::make('instruksi_umum')
-                    ->maxLength(65535)
-                    ->columnSpanFull()
-                    ->label('Instruksi Umum (Opsional)'),
-
                 Forms\Components\Repeater::make('resepObatDetails')
                     ->relationship()
                     ->schema([
@@ -107,10 +102,6 @@ class ResepObatResource extends Resource
                     ->listWithLineBreaks() // Display list of medicines with new lines
                     ->bulleted() // Display as a bulleted list
                     ->label('Daftar Obat'),
-                Tables\Columns\TextColumn::make('instruksi_umum')
-                    ->toggleable(isToggledHiddenByDefault: true)
-                    ->wrap()
-                    ->label('Instruksi Umum'),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

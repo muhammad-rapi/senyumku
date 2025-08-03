@@ -14,7 +14,7 @@ class DashboardStatsOverview extends BaseWidget
     {
         if (auth()->user()->hasRole('pasien')) {
             return [
-                Stat::make('Total Rekam Medis', auth()->user()->pasien->rekamMedis()->count())
+                Stat::make('Total Rekam Medis', auth()->user()->pasien?->rekamMedis()->count())
             ];
         }
         return [

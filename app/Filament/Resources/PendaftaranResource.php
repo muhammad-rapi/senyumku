@@ -63,16 +63,6 @@ class PendaftaranResource extends Resource
                     ->maxLength(255)
                     ->columnSpanFull()
                     ->label('Keluhan'),
-                Forms\Components\Select::make('status')
-                    ->options([
-                        'Menunggu Konfirmasi' => 'Menunggu Konfirmasi',
-                        'Dikonfirmasi' => 'Dikonfirmasi',
-                        'Selesai' => 'Selesai',
-                        'Dibatalkan' => 'Dibatalkan',
-                    ])
-                    ->required()
-                    ->default('Menunggu Konfirmasi')
-                    ->label('Status Pendaftaran'),
             ])->columns(2);
     }
 

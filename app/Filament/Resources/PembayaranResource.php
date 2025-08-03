@@ -28,19 +28,50 @@ class PembayaranResource extends Resource
             ->schema([
                 Forms\Components\Select::make('pemeriksaan_id')
                     ->relationship('pemeriksaan', 'id')
-                    ->getOptionLabelFromRecordUsing(fn (Model $record) => "Pemeriksaan ID: {$record->id} - Pasien: {$record->pasien->nama}")
+                    ->getOptionLabelFromRecordUsing(fn(Model $record) => "Pemeriksaan ID: {$record->id} - Pasien: {$record->pasien->nama}")
                     ->required()
                     ->searchable()
                     ->preload()
-                    ->columnSpanFull()
-                    ->label('Pemeriksaan Terkait'),
-                Forms\Components\Select::make('pasien_id')
-                    ->relationship('pasien', 'nama')
-                    ->required()
-                    ->searchable()
-                    ->preload()
-                    ->columnSpanFull()
-                    ->label('Pasien'),
+                    ->label('Pemeriksaan Terkait')
+                    ->reactive()
+                    ->afterStateUpdated(function ($state, callable $set) {
+                        $pemeriksaan = \App\Models\Pemeriksaan::find($state);
+
+                        if (!$pemeriksaan) return;
+
+                        $biayaPemeriksaan = $pemeriksaan->biaya_pemeriksaan ?? 0;
+
+                        $biayaObat = 0;
+                        if ($pemeriksaan->resepObat) {
+                            foreach ($pemeriksaan->resepObat->resepObatDetails as $detail) {
+                                $obat = \App\Models\Obat::find($detail->obat_id);
+                                if ($obat) {
+                                    $biayaObat += $obat->harga * $detail->jumlah;
+                                }
+                            }
+                        }
+
+                        $set('biaya_pemeriksaan', $biayaPemeriksaan);
+                        $set('biaya_obat', $biayaObat);
+                        $set('jumlah_pembayaran', $biayaPemeriksaan + $biayaObat);
+                        $set('pasien_id', $pemeriksaan->pasien_id);
+                    }),
+
+
+                Forms\Components\TextInput::make('biaya_pemeriksaan')
+                    ->numeric()
+                    ->prefix('Rp')
+                    ->label('Biaya Pemeriksaan')
+                    ->disabled()
+                    ->dehydrated(),
+
+                Forms\Components\TextInput::make('biaya_obat')
+                    ->numeric()
+                    ->prefix('Rp')
+                    ->label('Biaya Obat')
+                    ->disabled()
+                    ->dehydrated(),
+
                 Forms\Components\DatePicker::make('tanggal_pembayaran')
                     ->required()
                     ->native(false)
@@ -50,7 +81,10 @@ class PembayaranResource extends Resource
                     ->required()
                     ->numeric()
                     ->prefix('Rp')
-                    ->label('Jumlah Pembayaran'),
+                    ->label('Jumlah Pembayaran')
+                    ->disabled()
+                    ->dehydrated(),
+
                 Forms\Components\Select::make('metode_pembayaran')
                     ->options([
                         'Tunai' => 'Tunai',
@@ -96,7 +130,7 @@ class PembayaranResource extends Resource
                     ->label('Metode'),
                 Tables\Columns\TextColumn::make('status')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
+                    ->color(fn(string $state): string => match ($state) {
                         'Belum Lunas' => 'warning',
                         'Lunas' => 'success',
                     })

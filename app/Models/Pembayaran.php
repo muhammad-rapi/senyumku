@@ -16,6 +16,8 @@ class Pembayaran extends Model
         'tanggal_pembayaran',
         'jumlah_pembayaran',
         'metode_pembayaran',
+        'biaya_pemeriksaan',
+        'biaya_obat',
         'status',
     ];
 
@@ -23,6 +25,13 @@ class Pembayaran extends Model
         'tanggal_pembayaran' => 'date',
         'jumlah_pembayaran' => 'decimal:2',
     ];
+
+    protected static function booted()
+    {
+        static::creating(function ($pembayaran) {
+            $pembayaran->pasien_id = $pembayaran->pemeriksaan->pasien_id;
+        });
+    }
 
     /**
      * Get the pemeriksaan that owns the pembayaran.

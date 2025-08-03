@@ -16,4 +16,23 @@ class ViewPemeriksaan extends ViewRecord
             Actions\EditAction::make(),
         ];
     }
+
+    protected function mutateFormDataBeforeFill(array $data): array
+    {
+        $resepObat = $this->record->resepObat;
+
+        if ($resepObat) {
+            $data['resepObatDetails'] = $resepObat->resepObatDetails->map(function ($detail) {
+                return [
+                    'obat_id' => $detail->obat_id,
+                    'jumlah' => $detail->jumlah,
+                    'dosis' => $detail->dosis,
+                ];
+            })->toArray();
+        } else {
+            $data['resepObatDetails'] = [];
+        }
+
+        return $data;
+    }
 }

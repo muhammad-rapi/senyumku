@@ -79,34 +79,41 @@ class RolesAndPermissionsSeeder extends Seeder
         Permission::firstOrCreate(['name' => 'view_dashboard']);
 
         // Buat Roles dan berikan Permissions
-        $roleAdmin = Role::firstOrCreate(['name' => 'admin']);
-        $roleAdmin->givePermissionTo(Permission::all()); // Admin memiliki semua izin
+        $roleAdmin = Role::firstOrCreate(['name' => 'staff_administrasi']);
+        $allPermissions = Permission::all();
+        $permissionsToExclude = [
+            'create_examinations',
+            'edit_examinations',
+            'delete_examinations',
+            'view_medical_records',
+            'create_medical_records',
+            'edit_medical_records',
+            'delete_medical_records'
+        ];
+        $permissionsToGive = $allPermissions->filter(function ($permission) use ($permissionsToExclude) {
+            return !in_array($permission->name, $permissionsToExclude);
+        });
 
-        $roleStafAdministrasi = Role::firstOrCreate(['name' => 'staff_administrasi']);
-        $roleStafAdministrasi->givePermissionTo([
-            'view_registrations', 'create_registrations', 'edit_registrations',
-            'view_examinations', 'create_examinations', 'edit_examinations',
-            'view_patients', 'create_patients', 'edit_patients', 'delete_patients',
-            'view_payments', 'create_payments', 'edit_payments',
-            'view_medical_records', 'create_medical_records', 'edit_medical_records',
-            'view_doctors',
-            'view_dashboard',
-        ]);
-
-        $roleStafPengelolaObat = Role::firstOrCreate(['name' => 'staf_pengelola_obat']);
-        $roleStafPengelolaObat->givePermissionTo([
-            'view_prescriptions', 'create_prescriptions', 'edit_prescriptions',
-            'view_medicines', 'create_medicines', 'edit_medicines', 'delete_medicines',
-        ]);
+        $roleAdmin->givePermissionTo($permissionsToGive->pluck('name'));
 
         $roleDokter = Role::firstOrCreate(['name' => 'dokter']);
         $roleDokter->givePermissionTo([
-            'view_examinations', 'create_examinations', 'edit_examinations',
+            'view_examinations',
+            'create_examinations',
+            'edit_examinations',
             'view_patients',
-            'view_medical_records', 'create_medical_records', 'edit_medical_records',
-            'view_prescriptions', 'create_prescriptions', 'edit_prescriptions',
+            'view_medical_records',
+            'create_medical_records',
+            'edit_medical_records',
+            'view_prescriptions',
+            'create_prescriptions',
+            'edit_prescriptions',
             'view_medicines',
-            'view_prescription_reports', 'view_medical_record_reports',
+            'create_medicines',
+            'edit_medicines',
+            'delete_medicines',
+            'view_prescription_reports',
+            'view_medical_record_reports',
         ]);
 
         $rolePasien = Role::firstOrCreate(['name' => 'pasien']);
@@ -117,34 +124,10 @@ class RolesAndPermissionsSeeder extends Seeder
 
         // Buat contoh user dan berikan role
         $userAdmin = User::firstOrCreate(
-            ['email' => 'admin@senyumku.com'],
-            ['name' => 'Admin SenyumKu', 'password' => bcrypt('password')]
+            ['email' => 'admin@gmail.com'],
+            ['name' => 'Admin Senyumku', 'password' => bcrypt('password')]
         );
-        $userAdmin->assignRole('admin');
+        $userAdmin->assignRole('staff_administrasi');
 
-        $userStafAdministrasi = User::firstOrCreate(
-            ['email' => 'staff.adm@senyumku.com'],
-            ['name' => 'Staff Administrasi', 'password' => bcrypt('password')]
-        );
-        $userStafAdministrasi->assignRole('staff_administrasi');
-
-        $userStafPengelolaObat = User::firstOrCreate(
-            ['email' => 'staff.obat@senyumku.com'],
-            ['name' => 'Staff Pengelola Obat', 'password' => bcrypt('password')]
-        );
-        $userStafPengelolaObat->assignRole('staf_pengelola_obat');
-
-        $userDokter = User::firstOrCreate(
-            ['email' => 'dokter@senyumku.com'],
-            ['name' => 'Dr. Milliyan', 'password' => bcrypt('password')]
-        );
-        $userDokter->assignRole('dokter');
-
-        $userPasien = User::firstOrCreate(
-            ['email' => 'pasien@senyumku.com'],
-            ['name' => 'Pasien Contoh', 'password' => bcrypt('password')]
-        );
-        $userPasien->assignRole('pasien');
     }
 }
-

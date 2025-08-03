@@ -118,10 +118,10 @@ class ObatResource extends Resource
         return auth()->user()->can('view_medicines');
     }
 
-    public static function canCreate(): bool
-    {
-        return auth()->user()->can('create_medicines');
-    }
+    // public static function canCreate(): bool
+    // {
+    //     return auth()->user()->can('create_medicines');
+    // }
 
     public static function canEdit(Model $record): bool
     {

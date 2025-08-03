@@ -10,6 +10,21 @@ class Pendaftaran extends Model
 {
     use HasFactory;
 
+
+    /**
+     * The "booted" method of the model.
+     *
+     * @return void
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($pendaftaran) {
+            $pendaftaran->status = 'Selesai';
+        });
+    }
+
     protected $fillable = [
         'pasien_id',
         'dokter_id',

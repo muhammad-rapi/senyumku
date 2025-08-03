@@ -3,16 +3,13 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\PemeriksaanResource\Pages;
-use App\Filament\Resources\PemeriksaanResource\RelationManagers;
 use App\Models\Pemeriksaan;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class PemeriksaanResource extends Resource
 {
@@ -27,44 +24,64 @@ class PemeriksaanResource extends Resource
         return $form
             ->schema([
                 Forms\Components\Select::make('pendaftaran_id')
-                    ->relationship('pendaftaran', 'id') // Asumsi kita menampilkan ID pendaftaran
-                    ->getOptionLabelFromRecordUsing(fn (Model $record) => "Pendaftaran ID: {$record->id} - Pasien: {$record->pasien->nama}")
+                    ->relationship('pendaftaran', 'id')
+                    ->getOptionLabelFromRecordUsing(fn(Model $record) => "Pendaftaran ID: {$record->id} - Pasien: {$record->pasien->nama}")
                     ->required()
                     ->searchable()
                     ->preload()
                     ->columnSpanFull()
                     ->label('Pendaftaran Terkait'),
-                Forms\Components\Select::make('pasien_id')
-                    ->relationship('pasien', 'nama')
-                    ->required()
-                    ->searchable()
-                    ->preload()
-                    ->label('Pasien'),
-                Forms\Components\Select::make('dokter_id')
-                    ->relationship('dokter', 'nama')
-                    ->required()
-                    ->searchable()
-                    ->preload()
-                    ->label('Dokter'),
+
                 Forms\Components\DatePicker::make('tanggal_pemeriksaan')
                     ->required()
                     ->native(false)
                     ->displayFormat('d/m/Y')
                     ->label('Tanggal Pemeriksaan'),
+
                 Forms\Components\TextInput::make('biaya_pemeriksaan')
                     ->required()
                     ->numeric()
                     ->prefix('Rp')
                     ->label('Biaya Pemeriksaan'),
+
                 Forms\Components\Textarea::make('diagnosa')
                     ->required()
                     ->maxLength(65535)
                     ->columnSpanFull()
                     ->label('Diagnosa'),
+
                 Forms\Components\Textarea::make('catatan_medis')
                     ->maxLength(65535)
                     ->columnSpanFull()
                     ->label('Catatan Medis (Opsional)'),
+
+                Forms\Components\Repeater::make('resepObatDetails')
+                    ->schema([
+                        Forms\Components\Select::make('obat_id')
+                            ->label('Nama Obat')
+                            ->options(\App\Models\Obat::where('stok', '>', 0)->get()->pluck('nama_obat', 'id'))
+                            ->options(\App\Models\Obat::all()->pluck('nama_obat', 'id'))
+                            ->required()
+                            ->searchable()
+                            ->preload()
+                            ->disableOptionsWhenSelectedInSiblingRepeaterItems(),
+                        Forms\Components\TextInput::make('jumlah')
+                            ->required()
+                            ->numeric()
+                            ->minValue(1)
+                            ->label('Jumlah'),
+                        Forms\Components\TextInput::make('dosis')
+                            ->required()
+                            ->maxLength(255)
+                            ->label('Dosis (Contoh: 1x sehari, 2 tablet)'),
+                    ])
+                    ->columns(3)
+                    ->defaultItems(1)
+                    ->minItems(1)
+                    ->columnSpanFull()
+                    ->grid(2)
+                    ->label('Resep Obat')
+
             ])->columns(2);
     }
 
@@ -96,16 +113,10 @@ class PemeriksaanResource extends Resource
                     ->money('IDR')
                     ->sortable()
                     ->label('Biaya'),
-                Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true)
-                    ->label('Dibuat Pada'),
-                Tables\Columns\TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true)
-                    ->label('Diperbarui Pada'),
+                Tables\Columns\TextColumn::make('resepObat.resepObatDetails.obat.nama_obat')
+                    ->listWithLineBreaks()
+                    ->bulleted()
+                    ->label('Daftar Obat'),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('pasien_id')
@@ -116,6 +127,7 @@ class PemeriksaanResource extends Resource
                     ->label('Filter Dokter'),
             ])
             ->actions([
+                Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
@@ -128,9 +140,7 @@ class PemeriksaanResource extends Resource
 
     public static function getRelations(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
 
     public static function getPages(): array
@@ -139,27 +149,35 @@ class PemeriksaanResource extends Resource
             'index' => Pages\ListPemeriksaans::route('/'),
             'create' => Pages\CreatePemeriksaan::route('/create'),
             'edit' => Pages\EditPemeriksaan::route('/{record}/edit'),
+            'view' => Pages\ViewPemeriksaan::route('/{record}'),
         ];
     }
 
-    // Penambahan authorization untuk Spatie roles
-    public static function canAccess(): bool
-    {
-        return auth()->user()->can('view_examinations');
-    }
+    // Tambahkan method ini
+public static function canCreate(): bool
+{
+    return ! auth()->user()->hasRole('staff_administrasi');
+}
 
-    public static function canCreate(): bool
-    {
-        return auth()->user()->can('create_examinations');
-    }
-
+    // Tambahkan method ini
     public static function canEdit(Model $record): bool
     {
-        return auth()->user()->can('edit_examinations');
+        return ! auth()->user()->hasRole('staff_administrasi');
     }
 
+    // Tambahkan method ini
     public static function canDelete(Model $record): bool
     {
-        return auth()->user()->can('delete_examinations');
+        return ! auth()->user()->hasRole('staff_administrasi');
+    }
+
+    // Tambahkan method ini untuk menyembunyikan bulk actions
+    protected function getTableBulkActions(): array
+    {
+        if (auth()->user()->hasRole('staff_administrasi')) {
+            return [];
+        }
+
+        return parent::getTableBulkActions();
     }
 }

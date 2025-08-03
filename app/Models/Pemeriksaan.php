@@ -26,6 +26,15 @@ class Pemeriksaan extends Model
         'biaya_pemeriksaan' => 'decimal:2',
     ];
 
+    protected static function booted()
+    {
+        static::creating(function ($pemeriksaan) {
+            if (auth()->user()->hasRole('dokter')) {
+                $pemeriksaan->dokter_id = auth()->user()->dokter->id;
+            }
+        });
+    }
+
     /**
      * Get the pendaftaran associated with the examination.
      */
@@ -67,6 +76,14 @@ class Pemeriksaan extends Model
     }
 
     /**
+     * Get the resep obat details associated with the examination.
+     */
+    public function resepObatDetails()
+    {
+        return $this->hasMany(ResepObatDetail::class, 'resep_obat_id');
+    }
+
+    /**
      * Get the pembayaran associated with the examination.
      */
     public function pembayaran(): HasOne
@@ -74,4 +91,3 @@ class Pemeriksaan extends Model
         return $this->hasOne(Pembayaran::class);
     }
 }
-
